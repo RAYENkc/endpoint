@@ -28,6 +28,7 @@ app.post('/api/create', (req, res) => {
                 Address: req.body.Address,
                 Role: req.body.Role,
                 DateCreated: req.body.DateCreated,
+                archive: req.body.archive,
                 
                
             }
@@ -61,22 +62,28 @@ app.get('/api/read/:prospect_id', (req, res) => {
 app.get('/archi/read',(req,res) => {
     (async () => {
         try {
-            let queryRef = db.collection('prospects');
+            let query = db.collection('prospects');
             
             let response = [];
            
-           let query =  await  queryRef.where('archive','==', "true").onSnapshot(querySnapshot => {
+            await query.where('archive', '==', 'true').get().then(querySnapshot => {
                 let docs = querySnapshot.docs;
-               
                 for (let doc of docs) {
-                   
                     const selectedProspect = {
                         id: doc.id,
-                        data: doc.data(),
+                        Social_Reason: doc.data().Social_Reason,
+                        Phone: doc.data().Phone,
+                        archive: doc.data().archive,
+                        Address: doc.data().Address,
+                        Role: doc.data().Role,
+                        DateCreated: doc.data().DateCreated,
+                       geo : doc.data().geo,
+                      //  latitude : doc.data().geo._latitude,
+                      //  longitude : doc.data().geo._longitude,
 
                     };
                     response.push(selectedProspect);
-               
+                    
 
                 }
                 return response;
@@ -91,6 +98,86 @@ app.get('/archi/read',(req,res) => {
         })();
 });
 
+//get Prospect archive
+
+app.get('/active/read',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('prospects');
+            
+            let response = [];
+           
+            await query.where('archive', '==', 'false').get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        Social_Reason: doc.data().Social_Reason,
+                        Phone: doc.data().Phone,
+                        archive: doc.data().archive,
+                        Address: doc.data().Address,
+                        Role: doc.data().Role,
+                        DateCreated: doc.data().DateCreated,
+                       geo : doc.data().geo,
+                      //  latitude : doc.data().geo._latitude,
+                      //  longitude : doc.data().geo._longitude,
+
+                    };
+                    response.push(selectedProspect);
+                    
+
+                }
+                return response;
+             
+            });
+            //console.log(response);
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+//get Prospect archive
+app.get('/test/read',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('prospects');
+            
+            let response = [];
+           
+            await query.where('Address', '==', 'tunis').get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        Social_Reason: doc.data().Social_Reason,
+                        Phone: doc.data().Phone,
+                        archive: doc.data().archive,
+                        Address: doc.data().Address,
+                        Role: doc.data().Role,
+                        DateCreated: doc.data().DateCreated,
+                       geo : doc.data().geo,
+                      //  latitude : doc.data().geo._latitude,
+                      //  longitude : doc.data().geo._longitude,
+
+                    };
+                    response.push(selectedProspect);
+                    
+
+                }
+                return response;
+             
+            });
+            //console.log(response);
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
 // read all
 app.get('/api/read', (req, res) => {
     (async () => {
@@ -106,7 +193,7 @@ app.get('/api/read', (req, res) => {
                         id: doc.id,
                         Social_Reason: doc.data().Social_Reason,
                         Phone: doc.data().Phone,
-                      //  source: doc.data().source,
+                        archive: doc.data().archive,
                         Address: doc.data().Address,
                         Role: doc.data().Role,
                         DateCreated: doc.data().DateCreated,
@@ -144,6 +231,7 @@ app.put('/api/update/:prospect_id', (req, res) => {
            Address: req.body.Address,
            Role: req.body.Role,
            DateCreated: req.body.DateCreated,
+           archive: req.body.archive,
         
             //geo : req.body.geo
             

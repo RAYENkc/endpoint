@@ -69,7 +69,7 @@ app.get('/api/read', (req, res) => {
 
                     };
                     response.push(selectedProspect);
-                    
+
 
                 }
                 return response;
