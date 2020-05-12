@@ -86,25 +86,13 @@ app.get('/api/read', (req, res) => {
 
 // update
 app.put('/api/update/:assignmentId', (req, res) => {
-(async () => {
-    try {
-        const document = db.collection('assignments').doc(req.params.assignmentId);
-        await document.update({
-            IdAssignment: req.body.id,
-            IdCommercial: req.body.IdCommercial,
-            IdCommercialAffect: req.body.IdCommercialAffect,
-            IdProspect: req.body.IdProspect,
-            DateOfAssignment : req.body.DateOfAssignment,
-            description : req.body.description,
-            valid: req.body.valid
+
     
-        });
-        return res.status(200).send();
-    } catch (error) {
-        console.log(error);
-        return res.status(500).send(error);
-    }
-    })();
+        const document = db.collection('assignments').doc(req.params.assignmentId).set(req.body,{merge:true})
+        .then(()=> res.json({id:req.params.assignmentId}))
+        .catch((error)=> res.status(500).send(error));
+       
+    
 });
 
 // delete
@@ -119,6 +107,88 @@ app.delete('/api/delete/:assignmentId', (req, res) => {
         return res.status(500).send(error);
     }
     })();
+});
+
+//get my Prospect 
+app.get('/myprospects/read/:commercialId',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('assignments');
+            
+            let response = [];
+           
+            await query.where('IdCommercial', '==', req.params.commercialId).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data()
+                    };
+                    response.push(selectedProspect);
+                }
+                return response;
+            });
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+
+//get asset with idProspect
+app.get('/assig/read/:prospectId',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('assignments');
+            
+            let response = [];
+           
+            await query.where('IdProspect', '==', req.params.prospectId).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data()
+                    };
+                    response.push(selectedProspect);
+                }
+                return response;
+            });
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+//get the prospect a assignment
+app.get('/assignment/read',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('assignments');
+            
+            let response = [];
+           
+            await query.where('IdCommercialAffect', '==','0').get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data()
+                    };
+                    response.push(selectedProspect);
+                }
+                return response;
+            });
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
 });
 
 

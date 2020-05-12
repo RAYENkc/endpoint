@@ -6,6 +6,8 @@ const cors = require('cors');
 const app = express();
 app.use(cors({ origin: true }));
 
+const nodemailer = require('nodemailer');
+
 var serviceAccount = require("./permissions.json");
 const t =admin.firestore.GeoPoint;
 admin.initializeApp({
@@ -14,6 +16,16 @@ admin.initializeApp({
 });
 
 const db = admin.firestore();
+
+
+
+let transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'rayen.generalinox.com@gmail.com',
+        pass: 'RAYENKACEM123***'
+    }
+});
 
 
 
@@ -78,18 +90,11 @@ app.get('/archi/read',(req,res) => {
                         Role: doc.data().Role,
                         DateCreated: doc.data().DateCreated,
                        geo : doc.data().geo,
-                      //  latitude : doc.data().geo._latitude,
-                      //  longitude : doc.data().geo._longitude,
-
                     };
                     response.push(selectedProspect);
-                    
-
                 }
                 return response;
-             
             });
-            //console.log(response);
             return res.status(200).send(response );
         } catch (error) {
             console.log(error);
@@ -98,8 +103,7 @@ app.get('/archi/read',(req,res) => {
         })();
 });
 
-//get Prospect archive
-
+//get Prospect active
 app.get('/active/read',(req,res) => {
     (async () => {
         try {
@@ -197,6 +201,7 @@ app.get('/api/read', (req, res) => {
                         Address: doc.data().Address,
                         Role: doc.data().Role,
                         DateCreated: doc.data().DateCreated,
+                        Mail: doc.data().Mail,
                        geo : doc.data().geo,
                       //  latitude : doc.data().geo._latitude,
                       //  longitude : doc.data().geo._longitude,
@@ -227,7 +232,7 @@ app.put('/api/update/:prospect_id', (req, res) => {
            
            Social_Reason: req.body.Social_Reason,
            Phone: req.body.Phone,
-         //  Mail: req.body.Mail,
+           Mail: req.body.Mail,
            Address: req.body.Address,
            Role: req.body.Role,
            DateCreated: req.body.DateCreated,
@@ -500,9 +505,36 @@ app.post('/api/prospectMangers/create/:prospectId', (req, res) => {
                 FiretName: req.body.FiretName,
                 Phone : req.body.Phone,
                 Adress : req.body.Adress,
+                Email : req.body.Email,
                 Funct : req.body.Funct
             });
-            return res.status(200).send(req.body.id);
+            const dest = req.body.Email;
+            //const FiretName = req.body.FiretName;
+            const mailOptions = {
+                from: 'kacemrayen13@gmail.com', // Something like: Jane Doe <janedoe@gmail.com>
+                to: dest,
+                subject: 'welcome ' , // email subject
+                html: `<p style="font-size: 16px;">
+                    GÉNÉRAL INOX est une société industrielle opérant sur le marché de l’inox à l’échelle international.
+                    Elle est spécialisée dans la fabrication et la vente des accessoires standards ou personnalisée en Inox à savoir pièces pour l’assemblage de garde-corps, 
+                    rampes d’escaliers, balustrades, mains courantes et accessoires de meuble en Inox.
+
+                    Général Inox est bien située sur le marché des accessoires en Inox par la qualité de ses produits. 
+                    Sur un marché toujours plus exigeant où le rapport qualité prix se conjugue au quotidien avec le mot service,
+                   GI a choisi de s’adosser à un réseau de partenaires dont les engagements s’inscrivent dans la continuité de la stratégie d’accompagnement auprès de ses clients.
+                </p>
+                    <br />
+                  
+                ` // email content in HTML
+            };
+      
+            // returning result
+            return transporter.sendMail(mailOptions, (erro, info) => {
+                if(erro){
+                    return res.send(erro.toString());
+                }
+            });
+          //  return res.status(200).send(req.body.id);
         } catch (error) {
             console.log(error);
             return res.status(500).send(error);
@@ -534,6 +566,8 @@ app.get('/api/prospectMangers/read/:prospectId', (req, res) => {
                 }
                 return response;
             });
+
+            
             return res.status(200).send(response);
         } catch (error) {
             console.log(error);
