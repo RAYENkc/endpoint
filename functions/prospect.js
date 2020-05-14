@@ -1,4 +1,3 @@
-
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const express = require('express');
@@ -248,6 +247,44 @@ app.put('/api/update/:prospect_id', (req, res) => {
     }
     })();
 });
+
+
+// update
+app.put('/api/archi/:prospect_id', (req, res) => {
+    (async () => {
+        try {
+            const document = db.collection('prospects').doc(req.params.prospect_id);
+            await document.update({
+               
+               archive: 'true',
+             
+            });
+            return res.status(200).send();
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+    });
+
+// update
+app.put('/api/active/:prospect_id', (req, res) => {
+    (async () => {
+        try {
+            const document = db.collection('prospects').doc(req.params.prospect_id);
+            await document.update({
+               
+               archive: 'false',
+             
+            });
+            return res.status(200).send();
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+    });
+
 
 // delete
 app.delete('/api/delete/:prospect_id', (req, res) => {
@@ -513,12 +550,11 @@ app.post('/api/prospectMangers/create/:prospectId', (req, res) => {
             const mailOptions = {
                 from: 'kacemrayen13@gmail.com', // Something like: Jane Doe <janedoe@gmail.com>
                 to: dest,
-                subject: 'welcome ' , // email subject
+                subject: 'welcome to General Inox ' , // email subject
                 html: `<p style="font-size: 16px;">
                     GÉNÉRAL INOX est une société industrielle opérant sur le marché de l’inox à l’échelle international.
                     Elle est spécialisée dans la fabrication et la vente des accessoires standards ou personnalisée en Inox à savoir pièces pour l’assemblage de garde-corps, 
                     rampes d’escaliers, balustrades, mains courantes et accessoires de meuble en Inox.
-
                     Général Inox est bien située sur le marché des accessoires en Inox par la qualité de ses produits. 
                     Sur un marché toujours plus exigeant où le rapport qualité prix se conjugue au quotidien avec le mot service,
                    GI a choisi de s’adosser à un réseau de partenaires dont les engagements s’inscrivent dans la continuité de la stratégie d’accompagnement auprès de ses clients.
@@ -528,13 +564,31 @@ app.post('/api/prospectMangers/create/:prospectId', (req, res) => {
                 ` // email content in HTML
             };
       
+
+            await documentRef.collection('emails').doc().create(
+                {
+                    title : 'welcome to General Inox ',
+                    description : `<p style="font-size: 16px;">
+                    GÉNÉRAL INOX est une société industrielle opérant sur le marché de l’inox à l’échelle international.
+                    Elle est spécialisée dans la fabrication et la vente des accessoires standards ou personnalisée en Inox à savoir pièces pour l’assemblage de garde-corps, 
+                    rampes d’escaliers, balustrades, mains courantes et accessoires de meuble en Inox.
+                    Général Inox est bien située sur le marché des accessoires en Inox par la qualité de ses produits. 
+                    Sur un marché toujours plus exigeant où le rapport qualité prix se conjugue au quotidien avec le mot service,
+                   GI a choisi de s’adosser à un réseau de partenaires dont les engagements s’inscrivent dans la continuité de la stratégie d’accompagnement auprès de ses clients.
+                </p>
+                    <br />
+                  
+                ` ,
+                dateEmail : new Date()
+                }
+            );
             // returning result
-            return transporter.sendMail(mailOptions, (erro, info) => {
+             transporter.sendMail(mailOptions, (erro, info) => {
                 if(erro){
                     return res.send(erro.toString());
                 }
             });
-          //  return res.status(200).send(req.body.id);
+         return res.status(200).send(req.body.id);
         } catch (error) {
             console.log(error);
             return res.status(500).send(error);
@@ -635,3 +689,53 @@ app.put('/prospectMangers/update/:prospect_id/:prospectMangerId', (req, res) => 
         })();
     });
 
+
+/*****  get histoprique of emails *****/
+
+app.get('/emails/read/hist/:prospectId/:emailId', (req, res) => {
+    (async () => {
+        try {
+            const documentREF = db.collection('prospects').doc(req.params.prospectId);
+            const document = documentREF.collection('emails').doc(req.params.emailId);
+            let prospect = await document.get();
+            let response = { data : prospect.data(),
+                            id : prospect.id,
+                            
+                          };
+            return res.status(200).send(response);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+
+// read all
+app.get('/emails/read/hist/:prospectId', (req, res) => {
+    (async () => {
+        try {
+            const documentRef = db.collection('prospects').doc(req.params.prospectId);
+            let query = documentRef.collection('emails');
+            let response = [];
+            await query.get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspectManger = {
+                        id: doc.id,
+                        data : doc.data(),
+                      
+                    };
+                    response.push(selectedProspectManger);
+                }
+                return response;
+            });
+
+            
+            return res.status(200).send(response);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+    });

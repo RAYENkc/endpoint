@@ -123,7 +123,7 @@ app.get('/email/read',(req,res) => {
     });
 
 /****  update *****/
-app.put('/email/update/:emailId', (req, res) => {
+app.put('/email/sendDef/:emailId', (req, res) => {
     (async () => {
         try {
             const document = db.collection('emails').doc(req.params.emailId);
@@ -200,5 +200,27 @@ app.post('/sendMail', (req, res) => {
       })();
   });
 
+
+  // delete
+app.delete('/email/delete/:emailId', (req, res) => {
+    (async () => {
+        try {
+            const document = db.collection('emails').doc(req.params.emailId);
+            await document.delete();
+            return res.status(200).send();
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+    });
+
+    // update
+app.put('/email/update/:emailId', (req, res) => {
+    const document = db.collection('emails').doc(req.params.emailId).set(req.body,{merge:true})
+    .then(()=> res.json({id:req.params.emailId}))
+    .catch((error)=> res.status(500).send(error));
+    });
+    
 
   exports.emailApi= functions.https.onRequest(app);

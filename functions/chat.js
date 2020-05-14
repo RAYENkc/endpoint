@@ -28,13 +28,13 @@ app.post('/api/create', (req, res) => {
       })();
   });
   // create
-app.post('/api/message/create/:chatid', (req, res) => {
+app.post('/api/messages/:chatid', (req, res) => {
     (async () => {
         try {
             const documentRef = db.collection('chats').doc(req.params.chatid);
             await documentRef.collection('messages').doc().create(
               { 
-                mess : req.body.id,
+                
                 content: req.body.content,
                 photoUrl: req.body.photoUrl,
                 sender: req.body.sender,

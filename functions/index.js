@@ -1,7 +1,7 @@
 var prospectApi = require('./prospect');
 module.exports = prospectApi;
 
-
+/*
 var clientApi = require('./client');
 module.exports = clientApi;
 
@@ -26,6 +26,7 @@ var sendMail  = require('./mail');
 module.exports = sendMail ;
 
 
+
 var emailApi = require('./mail');
-module.exports = emailApi ;
+module.exports = emailApi ;*/
 

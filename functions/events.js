@@ -63,7 +63,7 @@ app.get('/event/read',(req,res) => {
 // update
 app.put('/event/update/:eventId', (req, res) => {
     const document = db.collection('events').doc(req.params.eventId).set(req.body,{merge:true})
-    .then(()=> res.json({id:req.params.noteId}))
+    .then(()=> res.json({id:req.params.eventId}))
     .catch((error)=> res.status(500).send(error));
  });
  
