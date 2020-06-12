@@ -2,6 +2,7 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const express = require('express');
 const cors = require('cors');
+const moment = require('moment');
 const app = express();
 app.use(cors({ origin: true }));
 
@@ -32,19 +33,54 @@ let transporter = nodemailer.createTransport({
 app.post('/api/create', (req, res) => {
     (async () => {
         try {
-            await db.collection('prospects').doc('/' + req.body.id + '/').create(
-              { Social_Reason: req.body.Social_Reason,
+            const now = moment();
+            const newDoc = await db.collection('prospects').doc().create(
+              { 
+                Social_Reason: req.body.Social_Reason,
                 Phone: req.body.Phone,
                 Mail: req.body.Mail,
                 Address: req.body.Address,
                 Role: req.body.Role,
-                DateCreated: req.body.DateCreated,
-                archive: req.body.archive,
+                DateCreated: now.format('DD/MM/YYYY'),
+                archive: 'false',
                 
+            });
+           const newassig = await db.collection('assignments').doc().create(
+                { 
+                  IdCommercial: req.body.IdCommercial,
+                  IdCommercialAffect: 'null',
+                  IdProspect:req.body.id,
+                  DateOfAssignment : now.format('DD/MM/YYYY'),
+                  description : '',
+                  valid: 'null'
                
-            }
-
-            );
+                 
+              });
+             /* const newnotification = await db.collection('notification').doc().create(
+                { 
+                  title: 'New prospect ',
+                  description: "le commercial x a ajouter "+ req.body.Social_Reason+" email :  "+ req.body.Mail +" son adress :"+req.body.Address,
+                  DateOfNote: now.format('DD/MM/YYYY'),
+                  sendto:'admin'
+                 
+              });*/
+          
+       
+            return res.status(200).send(`Created a new user: ${newDoc.id}  , ${newassig.doc} `);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+      })();
+  });
+  // create
+app.post('/api/create/note', (req, res) => {
+   
+    (async () => {
+        try {
+            await db.collection('notification').doc().create(
+              { title : "Title : " + req.body.title,
+            });
             return res.status(200).send();
         } catch (error) {
             console.log(error);
@@ -52,7 +88,6 @@ app.post('/api/create', (req, res) => {
         }
       })();
   });
-
   // read item
 app.get('/api/read/:prospect_id', (req, res) => {
     (async () => {
@@ -88,6 +123,7 @@ app.get('/archi/read',(req,res) => {
                         Address: doc.data().Address,
                         Role: doc.data().Role,
                         DateCreated: doc.data().DateCreated,
+                        Mail : doc.data().Mail,
                        geo : doc.data().geo,
                     };
                     response.push(selectedProspect);
@@ -122,9 +158,7 @@ app.get('/active/read',(req,res) => {
                         Role: doc.data().Role,
                         DateCreated: doc.data().DateCreated,
                        geo : doc.data().geo,
-                      //  latitude : doc.data().geo._latitude,
-                      //  longitude : doc.data().geo._longitude,
-
+                       Mail : doc.data().Mail,
                     };
                     response.push(selectedProspect);
                     
@@ -162,8 +196,7 @@ app.get('/test/read',(req,res) => {
                         Role: doc.data().Role,
                         DateCreated: doc.data().DateCreated,
                        geo : doc.data().geo,
-                      //  latitude : doc.data().geo._latitude,
-                      //  longitude : doc.data().geo._longitude,
+                     
 
                     };
                     response.push(selectedProspect);
@@ -202,8 +235,7 @@ app.get('/api/read', (req, res) => {
                         DateCreated: doc.data().DateCreated,
                         Mail: doc.data().Mail,
                        geo : doc.data().geo,
-                      //  latitude : doc.data().geo._latitude,
-                      //  longitude : doc.data().geo._longitude,
+                      
 
                     };
                     response.push(selectedProspect);
@@ -739,3 +771,233 @@ app.get('/emails/read/hist/:prospectId', (req, res) => {
         }
         })();
     });
+
+    
+    /***********************   filtrage     *****************************/
+
+app.get('/filter/day',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('prospects');
+             
+            const document = db.collection('prospects').doc();
+            let prospect = await document.get();
+           
+
+            const now = moment();
+          
+            let response = [];
+           
+            x = 'DateCreated';
+          y= now.format('DD/MM/YYYY');
+        //    y = firebase.firestore.Timestamp.fromDate(new Date());
+        //    startfulldate = admin.firestore.Timestamp.now();
+            await query.where(x, '==', y).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data()
+                    };
+                    response.push(selectedProspect);
+                }
+                return response;
+            });
+            //console.log(response);
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+
+app.get('/filter/date',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('prospects');
+            
+            let response = [];
+          //  let start = req.body.date;
+            const now = moment();
+            const dateFormatted = now.format('18/05/2020');
+            await query.where('DateCreated', '==', dateFormatted).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data()
+                    };
+                    response.push(selectedProspect);
+                    
+
+                }
+                return response;
+             
+            });
+            //console.log(response);
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+
+
+app.get('/filter/dateCreated',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('prospects');
+            
+            let response = [];
+            let start = req.body.date;
+           
+            await query.orderBy('DateCreated').get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data()
+
+                    };
+                    response.push(selectedProspect);
+                    
+
+                }
+                return response;
+             
+            });
+
+          
+            
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+/*
+app.get('/filter/test',(req,res) => {
+    (async () => {
+        try {
+
+            let query = db.collection('prospects');
+          //  const now = moment();
+        //    const dateFormatted = now.format('25/04/2020');
+            let response = [];
+           
+           
+            await query.where('Address','==','iiiiii').get().then(querySnapshot => {
+                admin.firestore().collection('pushtokens').get().then((snapshot)=>{
+                    var tokens = [];
+                    if(snapshot.empty) {
+                        console.log('No divices'); 
+                    }
+                    else{
+                        for(var token of snapshot.docs){
+                            tokens.push(token.data().devtoken);
+                        } 
+                        var payload = {
+                            "notification" : {
+                                //"title" : "New prospect ",// + msgData.Title,
+                                "title" : "Title : " + req.body.title,
+                                //"body" : "le commercial x a ajouter "+msgData.First_name +" "+msgData.Last_name+"  email :  "+msgData.Mail+" son adress :"+msgData.adress,// + msgData.desc,
+                                "body" :"body :" + req.body.content,
+                                "sound" : "default"
+                            },
+                            "data":{
+                                "sendername": req.body.title,
+                                "message": req.body.content,
+                                "click_action" : 'FLUTTER_NOTIFICATION_CLICK'
+                            }
+         
+                        }
+                         admin.messaging().sendToDevice(tokens, payload).then((response)=>{
+                            return   console.log('Pushed them all');
+                           }).catch((err)=>{
+                            return   console.log(err);
+                           })
+                    }
+                
+                    return  console.log('Pushed them all');
+                }  )
+              
+                return  console.log('Pushed them all');
+            });
+
+          
+            
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});*/
+
+
+//get Prospect active
+app.get('/active/email',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('prospects');
+            
+            let response = [];
+           
+            await query.where('archive', '==', 'false').get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        Mail : doc.data().Mail
+                    };
+                    response.push(selectedProspect);
+
+
+                }
+                return response;
+             
+            });
+            
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+app.get('/filter/day/:dd/:mm/:yyyy',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('prospects');
+             
+            const document = db.collection('prospects').doc();
+            let prospect = await document.get();
+            let response = [];
+            y = req.params.dd;
+            z = req.params.mm;
+            title = req.params.yyyy;
+            await query.where('DateCreated', '==', y + '/' + z + '/' + title).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data()
+                    };
+                    response.push(selectedProspect);
+                }
+                return response;
+            });
+            //console.log(response);
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});

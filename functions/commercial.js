@@ -97,7 +97,6 @@ app.put('/api/update/:commercial_id', (req, res) => {
             Adress : req.body.Adress,
             Mail : req.body.Mail
           
-    
             
         });
         return res.status(200).send();
@@ -123,6 +122,29 @@ app.delete('/api/delete/:commercial_id', (req, res) => {
 });
 
 
-
+// get info of commercail
+app.get('/info/commercail/:uid',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('commercials');
+            let response = [];
+            await query.where('uid', '==', req.params.uid ).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                       data: doc.data()
+                    };
+                    response.push(selectedProspect);
+                }
+                return response;
+            });
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
 
   exports.commercialApi= functions.https.onRequest(app);

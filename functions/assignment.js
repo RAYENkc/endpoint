@@ -13,20 +13,16 @@ const db = admin.firestore();
 app.post('/api/create', (req, res) => {
     (async () => {
         try {
-            await db.collection('assignments').doc('/' + req.body.id + '/').create(
+            await db.collection('assignments').doc().create(
               { 
                 IdAssignment: req.body.id,
                 IdCommercial: req.body.IdCommercial,
-                IdCommercialAffect: req.body.IdCommercialAffect,
+                IdCommercialAffect: 'null',
                 IdProspect: req.body.IdProspect,
-                DateOfAssignment : req.body.DateOfAssignment,
-                description : req.body.description,
-                valid: req.body.valid
-              
-               
-            }
-
-            );
+                DateOfAssignment : new Date(),
+                description : '',
+                valid: 'null'
+            });
             return res.status(200).send();
         } catch (error) {
             console.log(error);
@@ -57,23 +53,17 @@ app.get('/api/read', (req, res) => {
     (async () => {
         try {
             let query = db.collection('assignments');
-            
             let response = [];
-           
             await query.get().then(querySnapshot => {
                 let docs = querySnapshot.docs;
                 for (let doc of docs) {
                     const selectedProspect = {
                         id: doc.id,
                         data : doc.data(),
-
                     };
                     response.push(selectedProspect);
-
-
                 }
                 return response;
-             
             });
             //console.log(response);
             return res.status(200).send(response );
@@ -94,6 +84,39 @@ app.put('/api/update/:assignmentId', (req, res) => {
        
     
 });
+
+
+// valid affectation
+app.put('/api/valid/:assignmentId', (req, res) => {
+    (async () => {
+        try {
+            const document = db.collection('assignments').doc(req.params.assignmentId);
+            await document.update({
+                valid : 'true',
+            });
+            return res.status(200).send();
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+    });
+
+// supprime l'affictation 
+app.put('/api/refus/:assignmentId', (req, res) => {
+    (async () => {
+        try {
+            const document = db.collection('assignments').doc(req.params.assignmentId);
+            await document.update({
+                valid : 'false',
+            });
+            return res.status(200).send();
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+    });
 
 // delete
 app.delete('/api/delete/:assignmentId', (req, res) => {
@@ -193,5 +216,56 @@ app.get('/assignment/read',(req,res) => {
 
 
 
+//get my prospect
+app.get('/assig/read/my/:commercialId',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('assignments');
+            let response = [];
+            await query.where('IdCommercial', '==', req.params.commercialId).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data()
+                    };
+                    response.push(selectedProspect);
+                }
+                return response;
+            });
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
 
+
+//get asset with idProspect
+app.get('/assig/to',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('assignments');
+            
+            let response = [];
+           
+            await query.where('valid', '==','changed').get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data()
+                    };
+                    response.push(selectedProspect);
+                }
+                return response;
+            });
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
   exports.assignmentApi= functions.https.onRequest(app);

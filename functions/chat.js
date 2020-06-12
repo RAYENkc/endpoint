@@ -40,7 +40,45 @@ app.post('/api/messages/:chatid', (req, res) => {
                 sender: req.body.sender,
                 senderId: req.body.senderId,
                 timestamp: new Date()
-            });
+
+                
+            }).then(
+                admin.firestore().collection('pushtokens').get().then((snapshot)=>{
+                    var tokens = [];
+                    if(snapshot.empty) {
+                        console.log('No divices'); 
+                    }
+                    else{
+                        for(var token of snapshot.docs){
+                            tokens.push(token.data().devtoken);
+                        } 
+                        var payload = {
+                            "notification" : {
+                                "title" : "Title : " + req.body.sender,
+                                "body" :"body :" + req.body.content,
+                                "sound" : "default"
+                            },
+                            "data":{
+                                "sendername": req.body.sender,
+                                "message": req.body.content,
+                                "click_action" : 'FLUTTER_NOTIFICATION_CLICK'
+                            }
+         
+                        }
+                         admin.messaging().sendToDevice(tokens, payload).then((response)=>{
+                            return   console.log('Pushed them all');
+                           }).catch((err)=>{
+                               console.log(err);
+                           })
+                    }
+                    return  console.log('Pushed them all');
+                })
+                ).then(
+                    db.collection('chats').doc(req.params.chatid).update({
+                          date: new Date()
+                    })
+                );
+            
             return res.status(200).send(req.body.id);
         } catch (error) {
             console.log(error);
@@ -75,13 +113,12 @@ app.get('/api/read', (req, res) => {
             
             let response = [];
            
-            await query.get().then(querySnapshot => {
+            await query.orderBy('date', 'desc').get().then(querySnapshot => {
                 let docs = querySnapshot.docs;
                 for (let doc of docs) {
                     const selectedProspect = {
                         id: doc.id,
                         data : doc.data(),
-
                     };
                     response.push(selectedProspect);
                     
@@ -98,11 +135,6 @@ app.get('/api/read', (req, res) => {
         }
         })();
     });
-
-
-
-    
-
 
   // read item
 app.get('/chats/messages/:chatId/:messagesId', (req, res) => {
@@ -126,10 +158,8 @@ app.get('/chats/messages/:chatId', (req, res) => {
         try {
             const documentRef = db.collection('chats').doc(req.params.chatId);
             let query = documentRef.collection('messages');
-            
             let response = [];
-           
-            await query.get().then(querySnapshot => {
+            await query.orderBy('timestamp', 'desc').get().then(querySnapshot => {
                 let docs = querySnapshot.docs;
                 for (let doc of docs) {
                     const selectedProspect = {
@@ -153,4 +183,70 @@ app.get('/chats/messages/:chatId', (req, res) => {
         })();
     });
 
+
+//my chat list 
+// read all
+app.get('/api/client/read/:uid', (req, res) => {
+    (async () => {
+        try {
+            let query = db.collection('chats');
+            
+            let response = [];
+                    
+                    await query.orderBy('date', "desc").get().then(
+                        querySnapshot => {
+                            let docs = querySnapshot.docs;
+                            for (let doc of docs) {
+                                if(doc.data().client === req.params.uid){
+                                const selectedProspect= {
+                                        id: doc.id,
+                                        data : doc.data(),
+        
+                                };
+                                response.push(selectedProspect);
+                            }
+                }
+                return response;
+             
+            });
+            //console.log(response);
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+    });
+
+    // read all
+app.get('/api/admin/read/:uid', (req, res) => {
+    (async () => {
+        try {
+            let query = db.collection('chats');
+            
+            let response = [];
+                    
+                    await query.orderBy('date', "desc").get().then(
+                        querySnapshot => {
+                            let docs = querySnapshot.docs;
+                            for (let doc of docs) {
+                                if(doc.data().admin === req.params.uid){
+                                const selectedProspect= {
+                                        id: doc.id,
+                                        data : doc.data(),
+                                    
+                                };
+                                response.push(selectedProspect);
+                            }
+                }
+                return response;
+             
+            });
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+    });
     exports.chatApi= functions.https.onRequest(app);

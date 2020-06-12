@@ -5,7 +5,7 @@ const admin = require('firebase-admin');
 var msgData;
 
 exports.nodif = functions.firestore.document(
-    'Notification/{NotificationId}'
+    'notification/{notificationId}'
 ).onCreate((snapshot, context)=>{
        msgData = snapshot.data();
 
@@ -17,18 +17,18 @@ exports.nodif = functions.firestore.document(
            else{
                for(var token of snapshot.docs){
                    tokens.push(token.data().devtoken);
-               }
+               } 
+               
+
                var payload = {
                    "notification" : {
-                       //"title" : "New prospect ",// + msgData.Title,
-                       "title" : "Title : " + msgData.Title,
-                       //"body" : "le commercial x a ajouter "+msgData.First_name +" "+msgData.Last_name+"  email :  "+msgData.Mail+" son adress :"+msgData.adress,// + msgData.desc,
-                       "body" :"body :" + msgData.desc,
+                       "title" : "Title : " + msgData.title,
+                       "body" :"body :" + msgData.description,
                        "sound" : "default"
                    },
                    "data":{
-                       "sendername":  msgData.Title,
-                       "message": msgData.desc,
+                       "sendername":  msgData.title,
+                       "message": msgData.description,
                        "click_action" : 'FLUTTER_NOTIFICATION_CLICK'
                    }
 
