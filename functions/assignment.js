@@ -90,11 +90,19 @@ app.put('/api/update/:assignmentId', (req, res) => {
 app.put('/api/valid/:assignmentId', (req, res) => {
     (async () => {
         try {
+         //   let switchIdCommercail = [];
             const document = db.collection('assignments').doc(req.params.assignmentId);
+            let commercial = await document.get();
+            let response = { IdCommercial : commercial.data().IdCommercial,
+                             IdCommercialAffect: commercial.data().IdCommercialAffect};
+           let switchIdCommercail = response.IdCommercial;
             await document.update({
                 valid : 'true',
+                IdCommercial : response.IdCommercialAffect,
+                IdCommercialAffect :  'null'
+
             });
-            return res.status(200).send();
+            return res.status(200).send(response);
         } catch (error) {
             console.log(error);
             return res.status(500).send(error);
@@ -109,6 +117,7 @@ app.put('/api/refus/:assignmentId', (req, res) => {
             const document = db.collection('assignments').doc(req.params.assignmentId);
             await document.update({
                 valid : 'false',
+                IdCommercialAffect :  'null'
             });
             return res.status(200).send();
         } catch (error) {
@@ -186,7 +195,7 @@ app.get('/assig/read/:prospectId',(req,res) => {
         }
         })();
 });
-
+ 
 //get the prospect a assignment
 app.get('/assignment/read',(req,res) => {
     (async () => {
@@ -268,4 +277,45 @@ app.get('/assig/to',(req,res) => {
         }
         })();
 });
+
+//get assignement by day
+
+//get asset with idProspect
+app.get('/assignments/day/:dd/:mm/:yyyy/:idCommercial',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('assignments');
+            
+            let response = [];
+           dd = req.params.dd;
+           mm = req.params.mm;
+           yyyy = req.params.yyyy;
+            await query.where('DateOfAssignment', '==', dd + '/' + mm + '/' + yyyy).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                let nb = 0 ;
+                for (let doc of docs) {
+                    if( doc.data().IdCommercial === req.params.idCommercial){
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data(), 
+                        idProspect: doc.data().IdProspect,
+                        
+                    };
+                    response.push(selectedProspect);
+                }
+                }
+                return response;
+            });
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+
+
+
+
   exports.assignmentApi= functions.https.onRequest(app);

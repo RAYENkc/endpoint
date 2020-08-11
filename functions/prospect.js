@@ -6,6 +6,15 @@ const moment = require('moment');
 const app = express();
 app.use(cors({ origin: true }));
 
+
+const accountSid = 'ACe3a7f8b64fd0813aa6007c095725ef5d'
+const authToken = '4fab69be812108b28a48983ba07a1878'
+
+
+//const client = require('twilio')(accountSid, authToken);
+const client = require('twilio')(accountSid, authToken);
+const twilioNumber = '+12056724810'
+
 const nodemailer = require('nodemailer');
 
 var serviceAccount = require("./permissions.json");
@@ -22,8 +31,8 @@ const db = admin.firestore();
 let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'rayen.generalinox.com@gmail.com',
-        pass: 'RAYENKACEM123***'
+        user: 'ezzeddineismahene13@gmail.com',
+        pass: 'rayenkacem123'
     }
 });
 
@@ -33,8 +42,8 @@ let transporter = nodemailer.createTransport({
 app.post('/api/create', (req, res) => {
     (async () => {
         try {
-            const now = moment();
-            const newDoc = await db.collection('prospects').doc().create(
+           const now = moment();
+            const newDoc = await db.collection('prospects').add(
               { 
                 Social_Reason: req.body.Social_Reason,
                 Phone: req.body.Phone,
@@ -42,31 +51,33 @@ app.post('/api/create', (req, res) => {
                 Address: req.body.Address,
                 Role: req.body.Role,
                 DateCreated: now.format('DD/MM/YYYY'),
+                image: req.body.image,
                 archive: 'false',
                 
             });
-           const newassig = await db.collection('assignments').doc().create(
-                { 
-                  IdCommercial: req.body.IdCommercial,
-                  IdCommercialAffect: 'null',
-                  IdProspect:req.body.id,
-                  DateOfAssignment : now.format('DD/MM/YYYY'),
-                  description : '',
-                  valid: 'null'
-               
-                 
-              });
-             /* const newnotification = await db.collection('notification').doc().create(
-                { 
-                  title: 'New prospect ',
-                  description: "le commercial x a ajouter "+ req.body.Social_Reason+" email :  "+ req.body.Mail +" son adress :"+req.body.Address,
-                  DateOfNote: now.format('DD/MM/YYYY'),
-                  sendto:'admin'
-                 
-              });*/
-          
+        const newassig = await db.collection('assignments').add(
+            { 
+              IdCommercial: req.body.uid,
+              IdCommercialAffect: 'null',
+              IdProspect: newDoc.id,
+              DateOfAssignment : now.format('DD/MM/YYYY'),
+              description : '',
+              valid: 'null'
+          });
+
+        /* const newnotification = await db.collection('notification').doc().add(
+            { 
+              title: 'New prospect ',
+              description: "le commercial x a ajouter "+ req.body.Social_Reason+" email :  "+ req.body.Mail +" son adress :"+req.body.Address,
+              DateOfNote: now.format('DD/MM/YYYY'),
+              sendto:'admin'
+             
+          });*/
        
-            return res.status(200).send(`Created a new user: ${newDoc.id}  , ${newassig.doc} `);
+            return res.status(200).send(`${newDoc.id}`);
+
+
+    
         } catch (error) {
             console.log(error);
             return res.status(500).send(error);
@@ -89,13 +100,29 @@ app.post('/api/create/note', (req, res) => {
       })();
   });
   // read item
-app.get('/api/read/:prospect_id', (req, res) => {
+/*app.get('/api/read/:prospect_id', (req, res) => {
     (async () => {
         try {
             const document = db.collection('prospects').doc(req.params.prospect_id);
             let prospect = await document.get();
             let response = { data : prospect.data(),
                             id: req.params.prospect_id};
+            return res.status(200).send(response);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+    });*/
+
+      // read item
+app.get('/api/read/:chatid', (req, res) => {
+    (async () => {
+        try {
+            const document = db.collection('prospects').doc(req.params.chatid);
+            let commercial = await document.get();
+            let response = { data :commercial.data(),
+                            id: req.params.chatid};
             return res.status(200).send(response);
         } catch (error) {
             console.log(error);
@@ -157,8 +184,10 @@ app.get('/active/read',(req,res) => {
                         Address: doc.data().Address,
                         Role: doc.data().Role,
                         DateCreated: doc.data().DateCreated,
-                       geo : doc.data().geo,
-                       Mail : doc.data().Mail,
+                        geo : doc.data().geo,
+                        Mail : doc.data().Mail,
+                        image: doc.data().image
+
                     };
                     response.push(selectedProspect);
                     
@@ -346,11 +375,10 @@ app.post('/api/geolocations/create/:prospectId', (req, res) => {
         try {
             const documentRef = db.collection('prospects').doc(req.params.prospectId);
             await documentRef.collection('geolocations').doc().create(
-              { 
-
+              {
               geo: new t (  req.body.geo.lat,
                            req.body.geo.long,
-                 ),
+                         ),
             });
             return res.status(200).send(req.body.id);
         } catch (error) {
@@ -359,10 +387,6 @@ app.post('/api/geolocations/create/:prospectId', (req, res) => {
         }
       })();
   });
-
-
-
-
 
 // read all
 app.get('/api/geolocations/read/:prospectId', (req, res) => {
@@ -455,12 +479,12 @@ app.put('/geolocations/update/:prospect_id/:geolocationId', (req, res) => {
 app.post('/notes/create/:prospectId', (req, res) => {
     (async () => {
         try {
+            const now = moment();
             const documentRef = db.collection('prospects').doc(req.params.prospectId);
             await documentRef.collection('notes').doc().create(
-              { 
-                idNote: req.body.idNote,
+              {
                 textNote: req.body.textNote,
-                dateNote : req.body.dateNote
+                dateNote : now.format('DD/MM/YYYY'),
             });
             return res.status(200).send(req.body.id);
         } catch (error) {
@@ -562,20 +586,19 @@ app.put('/notes/update/:prospect_id/:noteId', (req, res) => {
 
 // create new Prospect manger
 
-app.post('/api/prospectMangers/create/:prospectId', (req, res) => {
+app.post('/api/VisAVis/create/:prospectId', (req, res) => {
     (async () => {
         try {
             const documentRef = db.collection('prospects').doc(req.params.prospectId);
             await documentRef.collection('prospectMangers').doc().create(
               { 
-
-                IdProMang: req.body.IdProMang,
                 LastName: req.body.LastName,
                 FiretName: req.body.FiretName,
-                Phone : req.body.Phone,
+                Phone : req.body.Phone,  
                 Adress : req.body.Adress,
                 Email : req.body.Email,
-                Funct : req.body.Funct
+                Funct : 'vis a vis',
+                
             });
             const dest = req.body.Email;
             //const FiretName = req.body.FiretName;
@@ -616,6 +639,7 @@ app.post('/api/prospectMangers/create/:prospectId', (req, res) => {
             );
             // returning result
              transporter.sendMail(mailOptions, (erro, info) => {
+                 
                 if(erro){
                     return res.send(erro.toString());
                 }
@@ -628,7 +652,71 @@ app.post('/api/prospectMangers/create/:prospectId', (req, res) => {
       })();
   });
 
+  app.post('/api/prospectManger/create/:prospectId', (req, res) => {
+    (async () => {
+        try {
+            const documentRef = db.collection('prospects').doc(req.params.prospectId);
+            await documentRef.collection('prospectMangers').doc().create(
+              { 
+                LastName: req.body.LastName,
+                FiretName: req.body.FiretName,
+                Phone : req.body.Phone,  
+                Adress : req.body.Adress,
+                Email : req.body.Email,
+                Funct : 'prospect Manger',
+                
+            });
+            const dest = req.body.Email;
+            //const FiretName = req.body.FiretName;
+            const mailOptions = {
+                from: 'kacemrayen13@gmail.com', // Something like: Jane Doe <janedoe@gmail.com>
+                to: dest,
+                subject: 'welcome to General Inox ' , // email subject
+                html: `<p style="font-size: 16px;">
+                    GÉNÉRAL INOX est une société industrielle opérant sur le marché de l’inox à l’échelle international.
+                    Elle est spécialisée dans la fabrication et la vente des accessoires standards ou personnalisée en Inox à savoir pièces pour l’assemblage de garde-corps, 
+                    rampes d’escaliers, balustrades, mains courantes et accessoires de meuble en Inox.
+                    Général Inox est bien située sur le marché des accessoires en Inox par la qualité de ses produits. 
+                    Sur un marché toujours plus exigeant où le rapport qualité prix se conjugue au quotidien avec le mot service,
+                   GI a choisi de s’adosser à un réseau de partenaires dont les engagements s’inscrivent dans la continuité de la stratégie d’accompagnement auprès de ses clients.
+                </p>
+                    <br />
+                  
+                ` // email content in HTML
+            };
+      
 
+            await documentRef.collection('emails').doc().create(
+                {
+                    title : 'welcome to General Inox ',
+                    description : `<p style="font-size: 16px;">
+                    GÉNÉRAL INOX est une société industrielle opérant sur le marché de l’inox à l’échelle international.
+                    Elle est spécialisée dans la fabrication et la vente des accessoires standards ou personnalisée en Inox à savoir pièces pour l’assemblage de garde-corps, 
+                    rampes d’escaliers, balustrades, mains courantes et accessoires de meuble en Inox.
+                    Général Inox est bien située sur le marché des accessoires en Inox par la qualité de ses produits. 
+                    Sur un marché toujours plus exigeant où le rapport qualité prix se conjugue au quotidien avec le mot service,
+                   GI a choisi de s’adosser à un réseau de partenaires dont les engagements s’inscrivent dans la continuité de la stratégie d’accompagnement auprès de ses clients.
+                </p>
+                    <br />
+                  
+                ` ,
+                dateEmail : new Date()
+                }
+            );
+            // returning result
+             transporter.sendMail(mailOptions, (erro, info) => {
+                 
+                if(erro){
+                    return res.send(erro.toString());
+                }
+            });
+         return res.status(200).send(req.body.id);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+      })();
+  });
 
 
 
@@ -772,6 +860,69 @@ app.get('/emails/read/hist/:prospectId', (req, res) => {
         })();
     });
 
+    /******************************************* filtrage poyr le prospect manger  ***************************/
+    //get vis a vis of prospect 
+app.get('/get/visavis/:prospectId',(req,res) => {
+    (async () => {
+        try {
+            let documentRef = db.collection('prospects').doc(req.params.prospectId);
+            let query = documentRef.collection('prospectMangers');
+            let response = [];
+           
+            await query.where('Funct', '==', 'vis a vis').get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        Mail : doc.data()
+                    };
+                    response.push(selectedProspect);
+
+
+                }
+                return response;
+             
+            });
+            
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+//get Manger of prospect
+app.get('/get/ProspectManger/:prospectId',(req,res) => {
+    (async () => {
+        try {
+            let documentRef = db.collection('prospects').doc(req.params.prospectId);
+            let query = documentRef.collection('prospectMangers');
+            
+            let response = [];
+           
+            await query.where('Funct', '==', 'prospect Manger').get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        Mail : doc.data()
+                    };
+                    response.push(selectedProspect);
+
+
+                }
+                return response;
+             
+            });
+            
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
     
     /***********************   filtrage     *****************************/
 
@@ -787,17 +938,21 @@ app.get('/filter/day',(req,res) => {
             const now = moment();
           
             let response = [];
-           
             x = 'DateCreated';
-          y= now.format('DD/MM/YYYY');
-        //    y = firebase.firestore.Timestamp.fromDate(new Date());
-        //    startfulldate = admin.firestore.Timestamp.now();
+            y= now.format('DD/MM/YYYY');
             await query.where(x, '==', y).get().then(querySnapshot => {
                 let docs = querySnapshot.docs;
                 for (let doc of docs) {
                     const selectedProspect = {
                         id: doc.id,
-                        data: doc.data()
+                        Social_Reason: doc.data().Social_Reason,
+                        Phone: doc.data().Phone,
+                        archive: doc.data().archive,
+                        Address: doc.data().Address,
+                        Role: doc.data().Role,
+                        DateCreated: doc.data().DateCreated,
+                        Mail: doc.data().Mail,
+                       
                     };
                     response.push(selectedProspect);
                 }
@@ -880,64 +1035,6 @@ app.get('/filter/dateCreated',(req,res) => {
         }
         })();
 });
-/*
-app.get('/filter/test',(req,res) => {
-    (async () => {
-        try {
-
-            let query = db.collection('prospects');
-          //  const now = moment();
-        //    const dateFormatted = now.format('25/04/2020');
-            let response = [];
-           
-           
-            await query.where('Address','==','iiiiii').get().then(querySnapshot => {
-                admin.firestore().collection('pushtokens').get().then((snapshot)=>{
-                    var tokens = [];
-                    if(snapshot.empty) {
-                        console.log('No divices'); 
-                    }
-                    else{
-                        for(var token of snapshot.docs){
-                            tokens.push(token.data().devtoken);
-                        } 
-                        var payload = {
-                            "notification" : {
-                                //"title" : "New prospect ",// + msgData.Title,
-                                "title" : "Title : " + req.body.title,
-                                //"body" : "le commercial x a ajouter "+msgData.First_name +" "+msgData.Last_name+"  email :  "+msgData.Mail+" son adress :"+msgData.adress,// + msgData.desc,
-                                "body" :"body :" + req.body.content,
-                                "sound" : "default"
-                            },
-                            "data":{
-                                "sendername": req.body.title,
-                                "message": req.body.content,
-                                "click_action" : 'FLUTTER_NOTIFICATION_CLICK'
-                            }
-         
-                        }
-                         admin.messaging().sendToDevice(tokens, payload).then((response)=>{
-                            return   console.log('Pushed them all');
-                           }).catch((err)=>{
-                            return   console.log(err);
-                           })
-                    }
-                
-                    return  console.log('Pushed them all');
-                }  )
-              
-                return  console.log('Pushed them all');
-            });
-
-          
-            
-            return res.status(200).send(response );
-        } catch (error) {
-            console.log(error);
-            return res.status(500).send(error);
-        }
-        })();
-});*/
 
 
 //get Prospect active
@@ -971,6 +1068,7 @@ app.get('/active/email',(req,res) => {
         })();
 });
 
+
 app.get('/filter/day/:dd/:mm/:yyyy',(req,res) => {
     (async () => {
         try {
@@ -987,13 +1085,159 @@ app.get('/filter/day/:dd/:mm/:yyyy',(req,res) => {
                 for (let doc of docs) {
                     const selectedProspect = {
                         id: doc.id,
-                        data: doc.data()
+                        Social_Reason: doc.data().Social_Reason,
+                        Phone: doc.data().Phone,
+                        archive: doc.data().archive,
+                        Address: doc.data().Address,
+                        Role: doc.data().Role,
+                        DateCreated: doc.data().DateCreated,
+                        Mail: doc.data().Mail,
+                        image: doc.data().image
                     };
                     response.push(selectedProspect);
                 }
                 return response;
             });
             //console.log(response);
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+//rappel of prospect visite
+    //get Prospect active
+    app.get('/rappel/event',(req,res) => {
+        (async () => {
+            try {
+                let query = db.collection('events');
+                const now = moment();
+                let response = [];
+                x = 'start';
+                //y= now.format();
+               // t = moment('2020-06-15').format("[Today is] dddd"); 
+                s = '2020';
+                var start =moment([2020, 4, 5]);
+                var end   = moment([now.format('YYYY'),now.format('MM'),now.format('DD')]);
+               //Date.now()
+                await query.get().then(querySnapshot => {
+                    let docs = querySnapshot.docs;
+                  
+                    for (let doc of docs) {
+              if( moment(doc.data().start).format("D") === "15"){
+                    const selectedProspect = {
+                    id: doc.id,
+                    data: doc.data(),
+                    testto: moment(doc.data().start).fromNow(true),
+                    test: moment(doc.data().start).toNow(),
+                    testo: moment().months(),
+                    startt:end.from(start),
+                    endt: end.from(start, true),
+                    d: now.format('DD')
+                 };
+                    response.push(selectedProspect);
+                    }
+                }
+                    return response;
+                });
+                
+                return res.status(200).send( response);
+            } catch (error) {
+                console.log(error);
+                return res.status(500).send(error);
+            }
+            })();
+    });
+
+//get social resont
+app.get('/prospect/getsocielResion/:resion',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('prospects');
+            
+            let response = [];
+           dd = req.params.resion;
+           
+            await query.where('Social_Reason', '==', dd ).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                let nb = 0 ;
+                for (let doc of docs) {
+               
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data(), 
+                    };
+                    response.push(selectedProspect);
+                
+                }
+                return response;
+            });
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+
+//get social resont
+app.get('/prospect/Address/:Address',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('prospects');
+            
+            let response = [];
+            Address = req.params.Address;
+           
+            await query.where('Address', '==', Address).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                let nb = 0 ;
+                for (let doc of docs) {
+               
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data(), 
+                    };
+                    response.push(selectedProspect);
+                
+                }
+                return response;
+            });
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+
+//get social resont
+app.get('/prospect/getMail/:Mail',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('prospects');
+            
+            let response = [];
+            Mail = req.params.Mail;
+           
+            await query.where('Mail', '==', Mail ).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                let nb = 0 ;
+                for (let doc of docs) {
+               
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data(), 
+                    };
+                    response.push(selectedProspect);
+                
+                }
+                return response;
+            });
             return res.status(200).send(response );
         } catch (error) {
             console.log(error);

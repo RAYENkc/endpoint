@@ -401,6 +401,335 @@ app.get('/archi/read',(req,res) => {
 });
 
 
+app.get('/filter/day',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('clients');
+             
+            const document = db.collection('clients').doc();
+            let prospect = await document.get();
+           
+
+            const now = moment();
+          
+            let response = [];
+           
+            x = 'DateCreated';
+            y= now.format('DD/MM/YYYY');
+        //    y = firebase.firestore.Timestamp.fromDate(new Date());
+        //    startfulldate = admin.firestore.Timestamp.now();
+            await query.where(x, '==', y).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data()
+                       
+                    };
+                    response.push(selectedProspect);
+                }
+                return response;
+            });
+            //console.log(response);
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+
+app.get('/filter/date',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('prospects');
+            
+            let response = [];
+          //  let start = req.body.date;
+            const now = moment();
+            const dateFormatted = now.format('18/05/2020');
+            
+            await query.where('DateCreated', '==', dateFormatted).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data()
+                    };
+                    response.push(selectedProspect);
+                    
+
+                }
+                return response;
+             
+            });
+            //console.log(response);
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+
+
+app.get('/filter/dateCreated',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('prospects');
+            
+            let response = [];
+            let start = req.body.date;
+           
+            await query.orderBy('DateCreated').get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data()
+
+                    };
+                    response.push(selectedProspect);
+                    
+
+                }
+                return response;
+             
+            });
+
+          
+            
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+
+//get Prospect active
+app.get('/active/email',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('prospects');
+            
+            let response = [];
+           
+            await query.where('archive', '==', 'false').get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        Mail : doc.data().Mail
+                    };
+                    response.push(selectedProspect);
+
+
+                }
+                return response;
+             
+            });
+            
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+app.get('/filter/day/:dd/:mm/:yyyy',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('clients');
+             
+            const document = db.collection('clients').doc();
+            let prospect = await document.get();
+            let response = [];
+            y = req.params.dd;
+            z = req.params.mm;
+            title = req.params.yyyy;
+            await query.where('DateCreated', '==', y + '/' + z + '/' + title).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data()
+                    };
+                    response.push(selectedProspect);
+                }
+                return response;
+            });
+            //console.log(response);
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+app.get('/filter/DataFirstOrder/:dd/:mm/:yyyy',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('clients');
+             
+            const document = db.collection('clients').doc();
+            let prospect = await document.get();
+            let response = [];
+            y = req.params.dd;
+            z = req.params.mm;
+            title = req.params.yyyy;
+            await query.where('DataFirstOrder', '==', y + '/' + z + '/' + title).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data()
+                    };
+                    response.push(selectedProspect);
+                }
+                return response;
+            });
+            //console.log(response);
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+app.get('/filter/DateOfLastOrder/:dd/:mm/:yyyy',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('clients');
+             
+            const document = db.collection('clients').doc();
+            let prospect = await document.get();
+            let response = [];
+            y = req.params.dd;
+            z = req.params.mm;
+            title = req.params.yyyy;
+            await query.where('DateCreated', '==', y + '/' + z + '/' + title).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data()
+                    };
+                    response.push(selectedProspect);
+                }
+                return response;
+            });
+            //console.log(response);
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+
+//get social resont
+app.get('/client/getsocielResion/:resion',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('clients');
+            
+            let response = [];
+           dd = req.params.resion;
+           
+            await query.where('Social_Reason', '==', dd ).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                let nb = 0 ;
+                for (let doc of docs) {
+               
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data(), 
+                    };
+                    response.push(selectedProspect);
+                
+                }
+                return response;
+            });
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+
+//get social resont
+app.get('/client/Address/:Address',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('clients');
+            
+            let response = [];
+            Address = req.params.Address;
+           
+            await query.where('Address', '==', Address).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                let nb = 0 ;
+                for (let doc of docs) {
+               
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data(), 
+                    };
+                    response.push(selectedProspect);
+                
+                }
+                return response;
+            });
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+
+//get social resont
+app.get('/client/getMail/:Mail',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('clients');
+            
+            let response = [];
+            Mail = req.params.Mail;
+           
+            await query.where('Mail', '==', Mail ).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                let nb = 0 ;
+                for (let doc of docs) {
+               
+                    const selectedProspect = {
+                        id: doc.id,
+                        data: doc.data(), 
+                    };
+                    response.push(selectedProspect);
+                
+                }
+                return response;
+            });
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
+
 /**********     notification    ***********/
 
 

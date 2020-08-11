@@ -14,11 +14,8 @@ app.post('/api/create', (req, res) => {
         try {
             await db.collection('chats').doc('/' + req.body.id + '/').create(
               { 
-                id : req.body.id 
-              
-               
-            }
-
+                id : req.body.id  
+              }
             );
             return res.status(200).send();
         } catch (error) {
@@ -249,4 +246,30 @@ app.get('/api/admin/read/:uid', (req, res) => {
         }
         })();
     });
+
+// get client chat
+app.get('/info/client/chat/:uid',(req,res) => {
+    (async () => {
+        try {
+            let query = db.collection('chats');
+            let response = [];
+            await query.where('client', '==', req.params.uid ).get().then(querySnapshot => {
+                let docs = querySnapshot.docs;
+                for (let doc of docs) {
+                    const selectedProspect = {
+                        id: doc.id,
+                       data: doc.data()
+                    };
+                    response.push(selectedProspect);
+                }
+                return response;
+            });
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+});
+
     exports.chatApi= functions.https.onRequest(app);

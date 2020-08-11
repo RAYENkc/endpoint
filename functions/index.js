@@ -2,12 +2,16 @@ var prospectApi = require('./prospect');
 module.exports = prospectApi;
 
 
+/*
+var smsApi = require('./sms');
+module.exports = smsApi;
+
 var clientApi = require('./client');
 module.exports = clientApi;
 
 var chatApi  = require('./chat');
 module.exports = chatApi ;
-/*
+
 var commercialApi = require('./commercial');
 module.exports = commercialApi;
 

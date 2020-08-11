@@ -91,18 +91,81 @@ app.get('/api/read/client/notif', (req, res) => {
                             };
                             response.push(selectedProspect);
                         }
-
-                           
-                            
-        
                         }
                         return response;
                     }
                     );
+            //console.log(response);
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+    });
 
-                
     
+
+// read all
+app.get('/api/read/admin/notif', (req, res) => {
+    (async () => {
+        try {
+            let query = db.collection('notification');
             
+            let response = [];
+           
+          
+                 await query.orderBy('timestamp', "desc").get().then(
+                    querySnapshot => {
+                        let docs = querySnapshot.docs;
+                        for (let doc of docs) {
+                            if(doc.data().sendto === "admin"){
+                            const selectedProspect= {
+                                    id: doc.id,
+                                    data : doc.data(),
+                                
+                            };
+                            response.push(selectedProspect);
+                        }
+                        }
+                        return response;
+                    }
+                    );
+            //console.log(response);
+            return res.status(200).send(response );
+        } catch (error) {
+            console.log(error);
+            return res.status(500).send(error);
+        }
+        })();
+    });
+
+    
+// read all
+app.get('/api/read/uid/:uid', (req, res) => {
+    (async () => {
+        try {
+            let query = db.collection('notification');
+            
+            let response = [];
+           
+          
+                 await query.orderBy('timestamp', "desc").get().then(
+                    querySnapshot => {
+                        let docs = querySnapshot.docs;
+                        for (let doc of docs) {
+                            if(doc.data().uid === req.params.uid){
+                            const selectedProspect= {
+                                    id: doc.id,
+                                    data : doc.data(),
+                                
+                            };
+                            response.push(selectedProspect);
+                        }
+                        }
+                        return response;
+                    }
+                    );
             //console.log(response);
             return res.status(200).send(response );
         } catch (error) {
